@@ -1,0 +1,3 @@
+AGGIUNGERE IL PADDING AD UNA IMMAGINE CON I DIVERSI TIPI STUDIATI.
+
+In aggiunta mettere le immagini risultati in un'unica immagine
