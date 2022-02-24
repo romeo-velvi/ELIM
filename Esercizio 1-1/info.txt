@@ -1,3 +1,4 @@
 AGGIUNGERE IL PADDING AD UNA IMMAGINE CON I DIVERSI TIPI STUDIATI.
 
-In aggiunta mettere le immagini risultati in un'unica immagine
+    - Con funzioni fatte ad-hoc
+    - Paragonare successivamente con le funzioni di libreria per differenze

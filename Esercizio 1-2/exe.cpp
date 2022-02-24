@@ -8,16 +8,54 @@
 
 using namespace cv;
 using namespace std;
-RNG rng(12345);
 
-Mat src, dst;
-
-
+#define VR_MEDIANA 0
+#define VR_MEDIA 1
+#define VR_MAT_FILTER_SIZE 3
 
 // funione per calcolare il valore medio in un intorno 3x3.
-// Se tipo =0 allora si calcola la MEDIANA, altrimenti la MEDIA
-unsigned char cvm (int i, int j, int tipo){
-	unsigned char res [9];
+unsigned char findMedian(Mat &img, int i, int j, int tipo);
+// convoluzione filtro su matrice
+void passFilter(Mat &src, Mat &dest, int tipo);
+
+int main(int argc, char **argv)
+{
+
+	// Load an image
+	Mat src = imread(argv[1], IMREAD_GRAYSCALE);
+
+	// Check if image is loaded fine
+	if (src.empty())
+	{
+		printf(" Error opening image\n");
+		return -1;
+	}
+
+	// INSERIMENTO BORDO
+	// calcolo grandezza del bordo
+	int br = (VR_MAT_FILTER_SIZE - 1) / 2; cout<<br<<endl;
+	// inserisco bordo di dimensioni calcolate prima
+	copyMakeBorder(src, src, br, br, br, br, BORDER_REFLECT, 0);
+
+	// visualizzazioni delle immagini (con bordo)
+	namedWindow("showimg", WINDOW_NORMAL);
+	imshow("showimg", src);
+	waitKey(0);
+
+	Mat dst;
+	passFilter(src,dst, VR_MEDIA);
+
+	namedWindow("showimg", WINDOW_NORMAL);
+	imshow("showimg", dst);
+	waitKey(0);
+
+	return 0;
+	// terminaizione del programma
+}
+
+unsigned char findMedian(Mat &img, int i, int j, int tipo)
+{
+	unsigned char res[9];
 	/*/c
 	res[0] = dst.at<unsigned char>(i,j);
 	//n
@@ -38,89 +76,61 @@ unsigned char cvm (int i, int j, int tipo){
 	res[8] = dst.at<unsigned char>(i,j+1);
 	//l'esercizio equivalente è quello riportato di sotto (per calcolarsi un intorno generico):
 	 */
-
-	int z=0;
-	for (int s=-1;s<=1;s++){
-		for (int t=-1;t<=1;t++){
-			res[z++]=dst.at<unsigned char>(i+s,j+t);
+	// Si prende gli indici della matrice 3x3 ove centro è un generico pixel i,j dell'immagine (paddingata)
+	int z = 0;
+	for (int s = -1; s <= 1; s++)
+	{
+		for (int t = -1; t <= 1; t++)
+		{
+			res[z++] = img.at<unsigned char>(i + s, j + t);
 		}
 	}
 
 	unsigned char x;
-	if(tipo==0){ //mediana
-		sort(res,res+(int)(sizeof(res)/sizeof(res[0])));
-		x= res[5];
-	}else{ // media
-		int sum=0;
-		for(int k=0 ;k<9;k++){
-			//cout<<" "<< (int) res[k];
-			sum=sum+res[k];
+	int sum = 0;
+	switch (tipo)
+	{
+	case VR_MEDIA:
+
+		for (int k = 0; k < 9; k++)
+		{
+			sum = sum + res[k];
 		}
-		x= sum/9;
+		x = sum / 9;
+
+		break;
+
+	case VR_MEDIANA:
+
+		sort(res, res + (int)(sizeof(res) / sizeof(res[0])));
+		x = res[5];
+
+		break;
+
+	default:
+		break;
 	}
+
 	return x;
 }
 
-
-
-int main(int argc, char** argv ) {
-
-	// Declare the variables
-	int top, bottom, left, right;
-	int borderType1 = BORDER_REPLICATE;
-
-	// Load an image
-    src = imread( argv[1], IMREAD_GRAYSCALE); 
-   
-   // Check if image is loaded fine
-    if(src.empty()) {
-        printf(" Error opening image\n");
-        return -1;
-    }
-    
-    // grandezza del bordo (in pixel)
-    int br=1; 
-    
-    // Initialize arguments for the filter
-    top = br; 
-    bottom = br;
-    left = br; 
-    right = br;
-    
-    //metto le destinazioni di ogni immagine
-    copyMakeBorder( src, dst, top, bottom, left, right, borderType1, 0 );
-    
-    
-    //visualizzazioni delle immagini 
-    namedWindow( "Padding EXE", WINDOW_NORMAL );
-    resizeWindow("Padding EXE",900,900);
-    imshow( "Padding EXE", dst ); 
-    waitKey( 0 );
-   
-    
+void passFilter(Mat &src, Mat &dst, int tipo)
+{
 	// Esercizio
-	
-	Mat m (dst.rows, dst.cols, CV_8UC1);
-	for (int i=0;i<dst.rows;i++){
-		if(i==0 || i==dst.rows){ // è il bordo
+	dst = Mat(src.rows, src.cols, CV_8UC1);
+	for (int i = 0; i < dst.rows; i++)
+	{
+		if (i == 0 || i == dst.rows)
+		{ // è il bordo
 			continue;
 		}
-		for (int j=0;j<dst.cols;j++){
-			if(j==0 || j==dst.cols){ // è il bordo
+		for (int j = 0; j < dst.cols; j++)
+		{
+			if (j == 0 || j == dst.cols)
+			{ // è il bordo
 				continue;
 			}
-			m.at<unsigned char>(i,j)= cvm(i,j,1);
+			dst.at<unsigned char>(i, j) = findMedian(src, i, j, tipo);
 		}
 	}
-	
-
-	namedWindow( "EXE", WINDOW_NORMAL );
-	resizeWindow("EXE",900,900);
-	imshow( "EXE", m ); 
-    waitKey( 0 );
-
-    
-	return 0;
-	// terminaizione del programma
 }
-
