@@ -9,93 +9,122 @@
 
 using namespace std;
 using namespace cv;
-RNG rng(12345);
 
+void create_mask_CV_32F(Mat &mask, int dim);
+float takekernelvalue(Mat &rangeimg, Mat &kernel);
+void correlazione(Mat &src, Mat &dst, int tipo_output, Mat &kernel);
+void compareBorder(Mat &src, Mat &maks);
 
-Mat generator(int dim){
-	Mat m(dim,dim,CV_32F);
-	srand(time(NULL));
-	int i,j;
-	for(i=0;i<dim;i++){
-    	for(j=0;j<dim;j++){
-    		if(j==0){
-    			m.at<float>(i,j)=-i;
-    		} else if(j==dim-1){
-    				m.at<float>(i,j)=i;
-    		}else{
-    		m.at<float>(i,j)=0;
-    		}
-    	}
-    } 
-    return m;
-}
+int main(int argc, char **argv)
+{
 
+    // LE IMMAGINI SONO IMPORTATE ED ELABORATE IN SCALA DI GRIGIO (CV_8UC)
+    // IL KERNEL PUÒ ANCHE ASSERE FLOAT
 
-int main( int argc, char** argv ){
-
-	int dim;
-	int i,j;
-	
-	if( argc < 2){
-        cout<<"usage: "<<argv[0]<<" image_name"<<endl;
-        exit(0);
-    }
-    String imageName = argv[1];
-
-	//Lettura immagine    
-    Mat image = imread( samples::findFile( imageName ), IMREAD_GRAYSCALE );
-    if( image.empty() ){ cout <<  "Could not open or find the image" << std::endl;
+    // Load an image and check if exists
+    Mat src = imread(argv[1], IMREAD_GRAYSCALE);
+    if (src.empty())
+    {
+        printf(" Error opening image\n");
         return -1;
     }
 
-    //Lettura dimensione filtro
-    cout<<"Inserire dimensione filtro: ";
-    cin>>dim;
+    // Lettura dimensione filtro
+    int dim, i, j;
+    cout << "Inserire dimensione filtro: ";
+    cin >> dim;
 
-    //Allocazione filtro
-    Mat average_filter = generator(dim);
-    cout<< "stampa matrice filtro normale"<<endl;
-    for(i=0;i<dim;i++){
-    	for(j=0;j<dim;j++){
-    		cout<<" "<<average_filter.at<float>(i,j);
-    	}
-    	cout<<endl;
-    }cout<<endl;
-    
-    // correlazione
-    Mat output1;
-    filter2D(image,output1,image.type(),average_filter);
-	    
-    
-    //Per la convoluzione ruotare il filtro di 180°
-    Mat r_filter; 
-    rotate(average_filter,r_filter,ROTATE_180);
-    cout<< "stampa matrice filtro ruotato"<<endl;
-    for(int i=0;i<dim;i++){
-    	for(int j=0;j<dim;j++){
-    		cout<<" "<<r_filter.at<float>(i,j);
-    	}
-    	cout<<endl;
+    // Creazione maschera
+    Mat kernel;
+    create_mask_CV_32F(kernel, dim);
+
+    // CORRELAZIONE
+    Mat dst, mask;
+    create_mask_CV_32F(mask, dim);
+    correlazione(src, dst, 0, kernel);
+    namedWindow("showimg", WINDOW_NORMAL);
+    imshow("showimg", dst);
+    waitKey(0);
+
+    // COMPARO RISULTATI
+    compareBorder(src, mask);
+
+    return 0;
+}
+
+void create_mask_CV_32F(Mat &mask, int dim)
+{
+    mask = Mat(dim, dim, CV_32FC1);
+    for (int i = 0; i < dim; i++)
+    {
+        for (int j = 0; j < dim; j++)
+        {
+            // cout<<"Inserire valore posizione: "<<i<<" "<<j<<endl;
+            // cin>>val;
+            mask.at<float>(i, j) = (float)1 / (dim * dim);
+        }
     }
-    
-    // convoluzione
-    Mat output2;
-    filter2D(image,output2,image.type(),r_filter);  
-    
-    
-    //mostro differenze
-    Mat combine(image.rows*4,image.cols*4, CV_8UC1);
-    Mat left_roi(combine, Rect(0, 0, output1.rows, output1.cols));
-	output1.copyTo(left_roi);
-	Mat right_roi(combine, Rect(output2.rows, 0, output2.rows, output2.cols));
-	output2.copyTo(right_roi);
-	imshow("differenze",combine);
-    waitKey(0);    
+}
 
+float takekernelvalue(Mat rangeimg, Mat &kernel)
+{
+    int n = kernel.rows;
+    float out = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            out = (float) out + rangeimg.at<unsigned char>(i, j) * kernel.at<float>(i, j);
+        }
+    }
+    return out;
+}
 
-    imshow("CORRELAZIONE",output1); 
-    imshow("CONVOLUZIONE",output2);
-    waitKey(0);    
-	
-	return 0;
+void correlazione(Mat &src, Mat &dst, int tipo_output, Mat &kernel)
+{
+    int n = kernel.rows;
+    // INSERIMENTO BORDO
+    // calcolo grandezza del bordo
+    int br = (n - 1) / 2;
+    cout << br << endl;
+    // inserisco bordo di dimensioni calcolate prima
+    // Mat src_border;
+    Mat dst1;
+    copyMakeBorder(src, dst, br, br, br, br, BORDER_CONSTANT, 0);
+    copyMakeBorder(src, dst1, br, br, br, br, BORDER_CONSTANT, 0);
+    cout << "src r-c: " << src.rows << " " << src.cols << endl;
+
+    for (int i = br; i < src.rows; i++)
+    {
+        for (int j = br; j < src.cols; j++)
+        {
+            dst.at<unsigned char>(i, j) = (unsigned char)takekernelvalue(dst1(Rect(j - br, i - br, n, n)), kernel);
+        }
+    }
+    // toglie il padding
+    dst = dst(Rect(br, br, src.cols, src.rows));
+}
+
+void compareBorder(Mat &src, Mat &mask)
+{
+    Mat dst1, dst2, tot;
+    filter2D(src, dst1, CV_8UC1, mask);
+        namedWindow("showimg", WINDOW_NORMAL);
+    imshow("showimg", dst1);
+    waitKey(0);
+    correlazione(src, dst2, 0, mask);
+
+    // show difference
+    for (int i = 0; i < dst1.rows; i++)
+    {
+        for (int j = 0; j < dst1.rows; j++)
+        {
+            if (dst1.at<unsigned char>(i, j) != dst2.at<unsigned char>(i, j))
+            {
+                cout << "diversi a: " << i << " " << j << endl;
+                return;
+            }
+        }
+    }
+    cout << "sono uguali" <<endl;
 }

@@ -43,7 +43,13 @@ int main(int argc, char **argv)
 	waitKey(0);
 
 	Mat dst;
-	passFilter(src,dst, VR_MEDIA);
+	passFilter(src,dst, VR_MEDIANA);
+
+	namedWindow("showimg", WINDOW_NORMAL);
+	imshow("showimg", dst);
+	waitKey(0);
+
+	medianBlur(src,dst, 15); //funzione librerira 15X15
 
 	namedWindow("showimg", WINDOW_NORMAL);
 	imshow("showimg", dst);

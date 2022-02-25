@@ -1,7 +1,3 @@
-SOSTITUIRE AL VALORE DI OGNI PIXEL IL VALORE MEDIO DEI LIVELLI DI GRIGIO IN UN INTORNO 3X3.
-
-nella function:
-	1) vi sono prensetate come si calcolano gli intorni generici dati x,y (ossia quei due cicli for innestati)
-	2) vi è possibilità di impostare anche il valore mediano anzichè la media.
-	
-
+Implementare l'algoritmo di correlazione/convoluzione e confrontare
+l'output con quello prodotto dalla funzione filter2D() usando un filtro
+media.
