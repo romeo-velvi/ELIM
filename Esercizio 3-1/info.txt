@@ -1,0 +1,4 @@
+Implementare il Laplaciano con kernel isotropico a 45° e 90° utilizzando la
+funzione di correlazione/convoluzione (o filter2D())
+    * Per normalizzare i livelli di grigio è possibile usare la funzione normalize()
+    * normalize(src, dst, 0, 255, NORM_MINMAX, CV_8U);
