@@ -11,6 +11,7 @@ using namespace std;
 using namespace cv;
 
 void compareImage(Mat &src, Mat &maks);
+
 void showimg(String s, Mat &m, int flag = 0, int x = 0, int y = 0)
 {
     namedWindow(s, WINDOW_NORMAL);
@@ -81,24 +82,33 @@ int main(int argc, char **argv)
     Mat isolap45, isolap90;
     createIsotropicLaplacian45(isolap45);
     createIsotropicLaplacian90(isolap90);
+
+    // CONVOLUZIONE COMMENTARE CODICE SOTTO
+    // rotate(isolap45,isolap45,ROTATE_180);
+    // rotate(isolap90,isolap90,ROTATE_180);
     
     //  showimg("90", isolap90, 1, 3, 3);
     //  showimg("45", isolap45, 1, 3, 3);
 
-    Mat dst45, dst90, dsttot;
+    Mat dst45,dst45n, dst90,dst90n, dsttot,dsttotn;
     filter2D(src,dst90,CV_8U,isolap90);
     filter2D(src,dst45,CV_8U,isolap45);
     dsttot = dst45|dst90;
 
     //nel caso il filtro laplaciano dia valori negativi
-    normalize(dst90, dst90, 0, 255, NORM_MINMAX, CV_8U);
-    normalize(dst45, dst45, 0, 255, NORM_MINMAX, CV_8U);
-    normalize(dsttot, dsttot, 0, 255, NORM_MINMAX, CV_8U);
+    normalize(dst90, dst90n, 0, 255, NORM_MINMAX, CV_8U);
+    normalize(dst45, dst45n, 0, 255, NORM_MINMAX, CV_8U);
+    normalize(dsttot, dsttotn, 0, 255, NORM_MINMAX, CV_8U);
 
     //mostro le immagini
     showimg("filter90", dst45);
     showimg("filter45", dst90);
     showimg("or 45e90", dsttot);
+
+    //mostro le immagini normalizzate
+    showimg("filter90 normalizzate", dst45n);
+    showimg("filter45 normalizzate", dst90n);
+    showimg("or 45e90 normalizzate", dsttotn);
 
     // creazione laplaciano con funzione libreria
     Mat lap;
@@ -115,6 +125,12 @@ int main(int argc, char **argv)
     dsttot = dsttot-lap;
     showimg("not", dsttot);
 
+    // ESEUGURE SHARPENING IMMAGINE
+    Mat sharpimg1 = src+(-1*dst90);
+    Mat sharpimg2 = src+(-1*dst45);
+    showimg("sharped 90",sharpimg1);
+    showimg("sharped 45",sharpimg2);
+
     return 0;
 }
 
@@ -127,10 +143,10 @@ void compareImage(Mat &m1, Mat &m2)
     }
 
     // show difference
-    int cnt;
+    int cnt=0;
     for (int i = 0; i < m1.rows; i++)
     {
-        for (int j = 0; j < m2.rows; j++)
+        for (int j = 0; j < m1.cols; j++)
         {
             if ((int)m1.at<unsigned char>(i, j) != (int)m2.at<unsigned char>(i, j))
             {
