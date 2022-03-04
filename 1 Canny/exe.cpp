@@ -1,13 +1,6 @@
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/videoio.hpp"
+#include "opencv2/opencv.hpp"
 #include <iostream>
-#include <sys/wait.h>
 #include <unistd.h>
-#include <time.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 using namespace cv;
 using namespace std;
