@@ -1,5 +1,0 @@
-Implementare il filtro di Sobel (gx e gy) utilizzando la funzione di
-correlazione/convoluzione (o filter2D())
-    *   Calcolare la risposta di entrambi i filtri
-    *   Calcolare la magnitudo del gradiente (entrambe le formulazioni)
-Utilizzare la risposta ottenuta per effettuare lo sharpening di un'immagine

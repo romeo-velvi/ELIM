@@ -131,6 +131,17 @@ int main(int argc, char **argv)
     showimg("sharped 90",sharpimg1);
     showimg("sharped 45",sharpimg2);
 
+    // LAPLACIAN BASE PER VEDERE EVIDENZIAZIONE LINEEE IN ABS or 0
+    Mat m, ma, m0;
+    Laplacian(src,m,CV_32F);
+    ma = abs(m);
+    showimg("Laplacian abs",ma);
+    m0 =m;
+    for (int i = 0; i < m.rows; i++)
+        for (int j = 0; j<m.cols;j++)
+            m0.at<float>(i,j) < 0 ? 0 :  m0.at<float>(i,j);
+    showimg("Laplacian 0",m0);
+    
     return 0;
 }
 
