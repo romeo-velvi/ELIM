@@ -8,6 +8,7 @@ using namespace std;
 // magnitudo = uchar ; orientation = float
 Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
 {
+    
     Mat dst = Mat::zeros(magnitudo.rows, magnitudo.cols, CV_8U);
     for (int i = 1; i < magnitudo.rows; i++)
     {
@@ -86,23 +87,30 @@ Mat tresholdIsteresi(Mat src, int lth, int hth)
 void myCanny(Mat src, Mat &dst, int k_size, int TL, int TH)
 {
     Mat gauss;
+
     // passo 1 -> sfocare
     GaussianBlur(src, gauss, Size(5, 5), 0);
+
     // passo 2 -> applicare filtro gx, gy (caso sobel)
     Mat sob_x, sob_y, magnitudo, orientation;
     Sobel(gauss, sob_x, CV_32F, 1, 0, k_size);
     Sobel(gauss, sob_y, CV_32F, 0, 1, k_size);
-    // passo 3 -> calcolo magnitudo
+
+    // passo 3 -> calcolo magnitudo e normalizzare
     magnitude(sob_x, sob_y, magnitudo);
     normalize(magnitudo, magnitudo, 0, 255, NORM_MINMAX, CV_8U);
+
     // passo 4 -> calcolo direzione (phase = atan() ad eccetto che ritorna solo valori positivi 0°,359°)
     phase(sob_x, sob_y, orientation, true);
+
     // passo 5 -> non-maxima-suppression
     Mat nms;
     nms = nonMaximaSuppression(magnitudo, orientation);
+
     // passo 6 -> tresholding con isteresi (doppo trashhold)
     Mat output;
     output = tresholdIsteresi(nms, TL, TH);
+
     // output
     dst = output;
 }
