@@ -5,16 +5,15 @@
 using namespace cv;
 using namespace std;
 
-// magnitudo = uchar ; orientation = float
+/*
 Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
 {
-    
     Mat dst = Mat::zeros(magnitudo.rows, magnitudo.cols, CV_8U);
     for (int i = 1; i < magnitudo.rows; i++)
     {
         for (int j = 1; j < magnitudo.cols; j++)
         {
-            float mag = magnitudo.at<uchar>(i, j);
+            uchar mag = magnitudo.at< uchar >(i, j);
             float angolo = orientation.at<float>(i, j);
             // si normalizza l'angolo poichè phase da solo valori positivi (ci sono anche negativi)
             angolo = angolo > 180 ? angolo - 360 : angolo;
@@ -23,23 +22,68 @@ Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
             if (((angolo > -22.5) && (angolo <= 22.5)) || ((angolo > 157.5) && (angolo <= -157.5)))
             { // VERTICALE
                 if (mag > magnitudo.at<uchar>(i, j - 1) && mag > magnitudo.at<uchar>(i, j + 1))
-                    dst.at<uchar>(i, j) = magnitudo.at<uchar>(i, j);
+                    dst.at<uchar>(i, j) = mag;
             }
             else if (((angolo > -67.5) && (angolo <= -22.5)) || ((angolo > 112.5) && (angolo <= 157.5)))
             { //+45°
                 if (mag > magnitudo.at<uchar>(i - 1, j - 1) && mag > magnitudo.at<uchar>(i + 1, j + 1))
-                    dst.at<uchar>(i, j) = magnitudo.at<uchar>(i, j);
+                    dst.at<uchar>(i, j) = mag;
             }
             else if (((angolo > -112.5) && (angolo <= -67.5)) || ((angolo > 67.5) && (angolo <= 112.5)))
             { // ORIZZONTALE
                 if (mag > magnitudo.at<uchar>(i - 1, j) && mag > magnitudo.at<uchar>(i + 1, j))
-                    dst.at<uchar>(i, j) = magnitudo.at<uchar>(i, j);
+                    dst.at<uchar>(i, j) = mag;
             }
             else if (((angolo > -157.5) && (angolo <= -112.5)) || ((angolo > 22.5) && (angolo <= 67.5)))
             { //-45°
                 if (mag > magnitudo.at<uchar>(i + 1, j - 1) && mag > magnitudo.at<uchar>(i - 1, j + 1))
-                    dst.at<uchar>(i, j) = magnitudo.at<uchar>(i, j);
+                    dst.at<uchar>(i, j) = mag;
             }
+        }
+    }
+    return dst;
+}
+
+*/
+
+// magnitudo = uchar ; orientation = float
+Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
+{
+
+    Mat dst = Mat::zeros(magnitudo.rows, magnitudo.cols, CV_8U);
+    for (int i = 1; i < magnitudo.rows; i++)
+    {
+        for (int j = 1; j < magnitudo.cols; j++)
+        {
+            uchar mag = magnitudo.at<uchar>(i, j);
+            float ang = orientation.at<float>(i, j);
+            // si normalizza l'angolo poichè phase da solo valori positivi (ci sono anche negativi)
+            ang = ang > 180 ? ang - 360 : ang;
+            int dx = 0, dy = 0;
+            // se la mag. del pixel i,j è maggiore degli opposti, lo prendo, altrimenti rimane 0
+            // si controlla in che direzione sono i pixel opposti
+            if (((ang > -22.5) && (ang <= 22.5)) || ((ang > 157.5) && (ang <= -157.5)))
+            { // VERTICALE
+                dx = 0;
+                dy = -1;
+            }
+            else if (((ang > -67.5) && (ang <= -22.5)) || ((ang > 112.5) && (ang <= 157.5)))
+            { //+45°
+                dx = -1;
+                dy = -1;
+            }
+            else if (((ang > -112.5) && (ang <= -67.5)) || ((ang > 67.5) && (ang <= 112.5)))
+            { // ORIZZONTALE
+                dx = -1;
+                dy = 0;
+            }
+            else if (((ang > -157.5) && (ang <= -112.5)) || ((ang > 22.5) && (ang <= 67.5)))
+            { //-45°
+                dx = +1;
+                dy = -1;
+            }
+            if (mag > magnitudo.at<uchar>(i + dx, j + dy) && mag > magnitudo.at<uchar>(i + (-1 * dx), j + (-1 * dy)))
+                dst.at<uchar>(i, j) = mag;
         }
     }
     return dst;
@@ -150,7 +194,7 @@ int main(int argc, char **argv)
     int lth = atoi(argv[2]);
     int hth = atoi(argv[3]);
     myCanny(src, dst, kernel_size, lth, hth);
-    showimg("input",src);
-    showimg("output",dst);
+    showimg("input", src);
+    showimg("output", dst);
     return 0;
 }
