@@ -12,7 +12,9 @@
         "variant": "cpp",
         "bitset": "cpp",
         "iostream": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp"
     },
     "cmake.configureOnOpen": false
 }

@@ -1,9 +1,12 @@
 #include "opencv2/opencv.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 #include <unistd.h>
 
 using namespace cv;
 using namespace std;
+
 
 /*
 Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
@@ -47,8 +50,7 @@ Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
 */
 
 // magnitudo = uchar ; orientation = float
-Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
-{
+Mat nonMaximaSuppression(Mat magnitudo, Mat orientation){
 
     Mat dst = Mat::zeros(magnitudo.rows, magnitudo.cols, CV_8U);
     for (int i = 1; i < magnitudo.rows; i++)
@@ -62,7 +64,7 @@ Mat nonMaximaSuppression(Mat magnitudo, Mat orientation)
             int dx = 0, dy = 0;
             // se la mag. del pixel i,j è maggiore degli opposti, lo prendo, altrimenti rimane 0
             // si controlla in che direzione sono i pixel opposti
-            if (((ang > -22.5) && (ang <= 22.5)) || ((ang > 157.5) && (ang <= -157.5)))
+            if (((ang > -22.5) && (ang <= 22.5)) || ((ang > 157.5) || (ang <= -157.5)))
             { // VERTICALE
                 dx = 0;
                 dy = -1;
@@ -128,6 +130,47 @@ Mat tresholdIsteresi(Mat src, int lth, int hth)
     return dst;
 }
 
+// Mat tresholdIsteresi_singlepixel(Mat src, int lth, int hth)
+// {
+//     Mat dst = Mat::zeros(src.rows, src.cols, CV_8U);
+//     for (int i = 1; i < src.rows; i++)
+//     {
+//         for (int j = 1; j < src.cols; j++)
+//         {
+//             if (src.at<uchar>(i, j) > hth)
+//             {
+//                 // Se il valore del pixel è maggiore della soglia alta diventa un edge forte
+//                 dst.at<uchar>(i, j) = 255;
+//             }
+//             else if (src.at<uchar>(i, j) < lth)
+//             {
+//                 // Se il valore del pixel è minore della soglia bassa viene eliminato
+//                 dst.at<uchar>(i, j) = 0;
+//             }
+//             else if (src.at<uchar>(i, j) >= lth && src.at<uchar>(i, j) <= hth)
+//             {
+//                 // Il valore del pixel si trova tra le due soglie, quindi è un edge debole
+//                 for (int x = -1; x <= 1; x++)
+//                 {
+//                     for (int y = -1; y <= 1; y++)
+//                     {
+//                         // Controllo i valori nel suo intorno 3x3
+//                         if (src.at<uchar>(i + x, j + y) > hth)
+//                         {
+//                             // Se il loro valore è maggiore della soglia alta
+//                             dst.at<uchar>(i, j) = 255;
+//                             cout<< "aa" <<endl;
+//                             break;
+//                             // vengono promossi a punti di edge forti
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     return dst;
+// }
+
 void myCanny(Mat src, Mat &dst, int k_size, int TL, int TH)
 {
     Mat gauss;
@@ -152,32 +195,13 @@ void myCanny(Mat src, Mat &dst, int k_size, int TL, int TH)
     nms = nonMaximaSuppression(magnitudo, orientation);
 
     // passo 6 -> tresholding con isteresi (doppo trashhold)
-    Mat output;
-    output = tresholdIsteresi(nms, TL, TH);
-
+    Mat output = tresholdIsteresi(nms, TL, TH);
+    // imshow("out1",output);
+    // Mat output2 = tresholdIsteresi_singlepixel(nms, TL, TH);
+    // imshow("out2",output2);
     // output
-    dst = output;
-}
 
-void showimg(String s, Mat &m, int flag = 0, int x = 0, int y = 0)
-{
-    namedWindow(s, WINDOW_NORMAL);
-    imshow(s, m);
-    waitKey(0);
-    if (flag)
-    {
-        cout << "--------------- " << s << " --------------- " << endl;
-        for (int i = 0; i < x; i++)
-        {
-            for (int j = 0; j < y; j++)
-            {
-                cout << "[" << (int)m.at<float>(i, j) << "]"
-                     << " ";
-            }
-            cout << endl;
-        }
-        // cout<<"---------------"<<endl;
-    }
+    dst = output;
 }
 
 int main(int argc, char **argv)
@@ -194,7 +218,7 @@ int main(int argc, char **argv)
     int lth = atoi(argv[2]);
     int hth = atoi(argv[3]);
     myCanny(src, dst, kernel_size, lth, hth);
-    showimg("input", src);
-    showimg("output", dst);
+    imshow("input", src);
+    imshow("output", dst);
     return 0;
 }
