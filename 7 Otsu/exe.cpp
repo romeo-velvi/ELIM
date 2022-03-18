@@ -39,7 +39,7 @@ void myOtsu(Mat &src, Mat &dest)
     - Calcolare la soglia k*, ovvero il valore k per cui 𝜎(2B)(k) è
     massimo
     */
-    double P1k, p1k, m1k, m2k, P2k, p2k;
+    double P1k = 0 , p1k = 0, m1k = 0, m2k = 0, P2k = 0, p2k = 0;
     double varianzaInterclasse = 0.0, maxVarianza = 0.0;
     int sogliaOttimale = 0;
     for (int i = 0; i < H_SIZE; i++)
