@@ -61,7 +61,7 @@ void mergeRegion(Mat src, Region &r1, Region &r2)
     // passo 1 -> se le aree in considerazione non hanno figli 
     if ((int)r1.child.size() == 0 && (int)r2.child.size() == 0)
     {
-        Rect r12 = r1.area | r2.area;
+        Rect r12 = r1.area | r2.area; //DA VEDERE
         // passo 2 -> si controlla che le regioni unite rispettino il predicato
         if (predicate(src(r12)))
         { // Se rispettano, le la regione 1 sarà equivalente a reg1 + reg2 
