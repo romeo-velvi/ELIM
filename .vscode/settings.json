@@ -14,7 +14,8 @@
         "iostream": "cpp",
         "string_view": "cpp",
         "cmath": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "condition_variable": "cpp"
     },
     "cmake.configureOnOpen": false
 }
