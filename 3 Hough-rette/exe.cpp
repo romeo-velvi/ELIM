@@ -33,7 +33,7 @@ void hough(Mat src, Mat &dst, int threshold)
                 for (theta = 0; theta < 180; theta++) // per ogni 0,2pi -> 0,180°
                 {
                     double angolo = (theta - 90) * CV_PI / 180; // caolco angolo -> radianti 
-                    rho = abs( y * cos(angolo) + x * sin(angolo) ); // calcolo rho = y*cos(angolo)+x*sin(angolo)
+                    rho = abs( x * cos(angolo) + y * sin(angolo) ); // calcolo rho = y*cos(angolo)+x*sin(angolo)
                     H.at<uchar>( (int) rho, theta)++; // incrementa voto rho, theta
                 }
             }
@@ -57,8 +57,8 @@ void hough(Mat src, Mat &dst, int threshold)
                 y = rho * sin(t); // trova y
                 sin_t = sin(t); // sin
                 cos_t = cos(t); // cos
-                Point pt1(cvRound(x + d * (-sin_t)), cvRound(y + d * cos_t)); //trova punto sapendo la formula x/y = d * (-sin_t/cos_t)
-                Point pt2(cvRound(x - d * (-sin_t)), cvRound(y - d * cos_t)); //trova punto sapendo la formula x/y = d * (-sin_t/cos_t)
+                Point pt1(cvRound(y + d * cos_t),cvRound(x + d * (-sin_t))); //trova punto sapendo la formula x/y = d * (-sin_t/cos_t)
+                Point pt2(cvRound(y - d * cos_t),cvRound(x - d * (-sin_t))); //trova punto sapendo la formula x/y = d * (-sin_t/cos_t)
                 line(dst, pt1, pt2, Scalar(0), 2, 0); // traccia la linea
             }
         }
