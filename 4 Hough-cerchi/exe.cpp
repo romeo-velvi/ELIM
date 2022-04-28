@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-void myHoughCerchi(Mat src, Mat &dst, int th)
+void myHoughCerchi(Mat src, Mat &dst, int th, int Rmin, int Rmax)
 {
     // passo 1 -> eseguire smooth
     Mat gauss;
@@ -17,12 +17,10 @@ void myHoughCerchi(Mat src, Mat &dst, int th)
     Mat canny;
     Canny(gauss, canny, 150, 230, 3);
 
-    // passo 3 -> dichiarazione range massimi/min dei raggi
-    int Rmin = 40;
-    int Rmax = 200;
+    // passo 3 -> init var-size per matrice voti
+    int sizes[] = {canny.rows, canny.cols, Rmax};
 
     // passo 4 -> dichiarazione matrice voti
-    int sizes[] = {canny.rows, canny.cols, Rmax};
     Mat H = Mat(3, sizes, CV_8U, Scalar(0));
 
     // passo 5 -> calcolo dei voti nella matrice
@@ -60,7 +58,9 @@ int main(int argc, char **argv)
     if (!src.data)
         return -1;
     int th = atoi(argv[2]);
-    myHoughCerchi(src, dst, th);
+    int Rmin = 40;
+    int Rmax = 200;
+    myHoughCerchi(src, dst, th, Rmin, Rmax);
     imshow("Input", src);
     imshow("Output", dst);
     waitKey(0);
