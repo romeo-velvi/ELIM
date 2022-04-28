@@ -6,7 +6,7 @@
 using namespace cv;
 using namespace std;
 
-void myHoughRette(Mat src, Mat &dst, int threshold)
+void myHoughCerchi(Mat src, Mat &dst, int threshold)
 {
     // passo 1: sfocare
     Mat gauss;
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     if (!src.data)
         return -1;
     Mat dst = src.clone();
-    myHoughRette(src, dst, atoi(argv[2]));
+    myHoughCerchi(src, dst, atoi(argv[2]));
     imshow("Immagine originale", src);
     imshow("dst", dst);
     waitKey(0);
