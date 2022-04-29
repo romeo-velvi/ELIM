@@ -18,24 +18,25 @@ struct Region
 
 bool predicate(Mat src)
 {
-    Scalar dev;
-    meanStdDev(src, Scalar(), dev);
-    return (dev[0] < MAX_DEV || src.cols * src.rows < MAX_AREA);
+    Scalar mean, stddev; meanStdDev(src, mean, stddev); // calcolo media e deviazione standard
+    return (stddev[0] < MAX_DEV || src.cols * src.rows < MAX_AREA);
 }
 
 // prende in input la porzione dell'immagine e l'aria (rettangolo) di splitting
 Region split(Mat src, Rect area)
 {
-    // passo 0 -> crea nuova Regione
+    // passo 0 -> crea e inizializzo nuova Regione
     Region R;
+    R.child = vector<Region>();
+    R.label = Scalar();
     R.valid = true;
     R.area = area;
      
-    // passo 1 -> controllo predicato della regione, vero? rimango, falso? split
+    // passo 1 -> controllo predicato della regione, vero? assegno, falso? split
     if (predicate(src))
-    {// Se il predicato è vero, la regione NON può essere separata
+    {// Se il predicato è vero, la regione NON deve essere separata
         Scalar mean, stddev;
-        meanStdDev(src, mean, stddev); // calcolo media (deviazione standard)
+        meanStdDev(src, mean, stddev); // calcolo media e deviazione standard
         R.label = mean; // assegno come label la media dev_std.
     }
     else
@@ -43,8 +44,8 @@ Region split(Mat src, Rect area)
         int w = src.cols / 2;
         int h = src.rows / 2;
         Region r1 = split(src(Rect(0, 0, w, h)), Rect(area.x, area.y, w, h)); // eseguo split rettangolo up-left
-        Region r2 = split(src(Rect(w, 0, w, h)), Rect(area.x + w, area.y, w, h)); // eseguo split rettangolo up-right
-        Region r3 = split(src(Rect(0, h, w, h)), Rect(area.x, area.y + h, w, h)); // eseguo split rettangolo down-left
+        Region r2 = split(src(Rect(0, h, w, h)), Rect(area.x, area.y + h, w, h)); // eseguo split rettangolo down-left 
+        Region r3 = split(src(Rect(w, 0, w, h)), Rect(area.x + w, area.y, w, h)); // eseguo split rettangolo up-right
         Region r4 = split(src(Rect(w, h, w, h)), Rect(area.x + w, area.y + h, w, h)); // eseguo split rettangolo down-right
         // aggiunge al rettangolo di partenza le regioni adiacenti splittate
         R.child.push_back(r1); // imshow("splitted",img(r1.area));    waitKey(0);
@@ -79,9 +80,9 @@ void merge(Mat src, Region &r)
     if ((int)r.child.size() > 0)
     { // Controlla se è possibile unire le regioni
         mergeRegion(src, r.child.at(0), r.child.at(1));
-        mergeRegion(src, r.child.at(2), r.child.at(3));
-        mergeRegion(src, r.child.at(0), r.child.at(2));
-        mergeRegion(src, r.child.at(1), r.child.at(3));
+		mergeRegion(src, r.child.at(0), r.child.at(2));
+		mergeRegion(src, r.child.at(3), r.child.at(1));
+        mergeRegion(src, r.child.at(3), r.child.at(2));
         for (int i = 0; i < (int)r.child.size(); i++)
             merge(src, r.child.at(i)); // Controllare che aver tolto l'if non causi problemi
     }
@@ -100,13 +101,15 @@ void display(Mat &out, Region R)
 
 int main(int argc, char *argv[])
 {
-    Mat src = imread(argv[1], IMREAD_ANYCOLOR);
+    Mat src = imread(argv[1], IMREAD_GRAYSCALE);
     if (src.empty())
     {
         cout << "Wrong PATH image selected\nPlease, try again..." << endl;
         exit(-1);
     }
     img = src;
+    int th = 10;
+    int min_area = 50;
 
     // passo 1: Dividi l'immagine. (Il rettangolo inziale dato come argomento è l'intera immagine).
     Region r = split(src, Rect(0, 0, src.cols, src.rows));
@@ -114,7 +117,8 @@ int main(int argc, char *argv[])
     // passo 2: richiama la funzione merge
     merge(src, r);
 
-    Mat out = src.clone();
+    // Mat out = src.clone();
+    Mat out = Mat::zeros(src.rows,src.cols,CV_8U);
     display(out, r);
 
     imshow("Input", src);
