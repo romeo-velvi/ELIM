@@ -38,11 +38,11 @@ void myHoughCerchi(Mat src, Mat &dst, int th, int Rmin, int Rmax)
                     }
 
     // passo 6 -> disegno dei cerchi
-    for (int r = Rmin; r < Rmax; r++)
-        for (int b = 0; b < canny.rows; b++)
-            for (int a = 0; a < canny.cols; a++)
-                if (H.at<uchar>(b, a, r) > th) // se il valore del voto è > del treshold
-                    circle(dst, Point(a, b), r, Scalar(255), 2, 8, 0); // circonferenza
+    for (int a = 0; a < canny.rows; a++)
+        for (int b = 0; b < canny.cols; b++)
+            for (int r = Rmin; r < Rmax; r++)
+                if (H.at<uchar>(a, b, r) > th)                         // se il valore del voto è > del treshold
+                    circle(dst, Point(b, a), r, Scalar(255), 2, 8, 0); // circonferenza
 }
 
 int main(int argc, char **argv)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
     Mat src = imread(argv[1], IMREAD_GRAYSCALE);
-    Mat dst = Mat::zeros(src.rows,src.cols,CV_8U);
+    Mat dst = Mat::zeros(src.rows, src.cols, CV_8U);
     if (!src.data)
         return -1;
     int th = atoi(argv[2]);
