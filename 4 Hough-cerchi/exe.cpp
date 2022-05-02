@@ -21,7 +21,7 @@ void myHoughCerchi(Mat src, Mat &dst, int th, int Rmin, int Rmax)
     int sizes[] = {canny.rows, canny.cols, Rmax};
 
     // passo 4 -> dichiarazione matrice voti
-    Mat H = Mat(3, sizes, CV_8U, Scalar(0));
+    Mat H = Mat::zeros(3, sizes, CV_8U);
 
     // passo 5 -> calcolo dei voti nella matrice
     for (int x = 0; x < canny.rows; x++)
@@ -31,8 +31,8 @@ void myHoughCerchi(Mat src, Mat &dst, int th, int Rmin, int Rmax)
                     for (int r = Rmin; r <= Rmax; r++)
                     {
                         double rad = (theta)*CV_PI / 180;
-                        double a = x - r * sin(rad);
-                        double b = y - r * cos(rad);
+                        double a = x - r * cos(rad);
+                        double b = y - r * sin(rad);
                         if ((a >= 0 && a < canny.rows) && (b >= 0 && b < canny.cols))
                             H.at<uchar>(a, b, r)++;
                     }
@@ -42,7 +42,7 @@ void myHoughCerchi(Mat src, Mat &dst, int th, int Rmin, int Rmax)
         for (int b = 0; b < canny.cols; b++)
             for (int r = Rmin; r < Rmax; r++)
                 if (H.at<uchar>(a, b, r) > th)                         // se il valore del voto è > del treshold
-                    circle(dst, Point(b, a), r, Scalar(255), 2, 8, 0); // circonferenza
+                    circle(dst, Point(b, a), r, Scalar(0), 2, 8, 0); // circonferenza
 }
 
 int main(int argc, char **argv)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
     Mat src = imread(argv[1], IMREAD_GRAYSCALE);
-    Mat dst = Mat::zeros(src.rows, src.cols, CV_8U);
+    Mat dst = src.clone()-50;
     if (!src.data)
         return -1;
     int th = atoi(argv[2]);

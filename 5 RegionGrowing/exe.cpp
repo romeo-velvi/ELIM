@@ -48,13 +48,13 @@ Mat grow(Mat &src, Mat &dest, Point seed, int th)
                     */
 
                     // GRAY SCALE // DELTA = | I-I'|
-                    uchar delta = (uchar)abs(src.at<uchar>(center) - src.at<uchar>(punto));
+                    uchar distanza_colore = (uchar)abs(src.at<uchar>(center) - src.at<uchar>(punto));
 
                     // Verifico varie condizioni
                     if (
                         dest.at<uchar>(punto) == 0 &&   // Non è stato ancora etichettato
                         region.at<uchar>(punto) == 0 && // Non è stato ancora inserito nella regione
-                        delta < th                      // Il delta è minore della soglia
+                        distanza_colore < th                      // Il delta è minore della soglia
                     )
                     {
                         stack.push(punto); // Così che i pixel adiacenti a questo verranno considerati

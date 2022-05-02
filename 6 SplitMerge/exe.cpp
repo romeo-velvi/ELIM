@@ -62,10 +62,10 @@ void mergeRegion(Mat src, Region &r1, Region &r2)
     // passo 1 -> se le aree in considerazione non hanno figli 
     if ((int)r1.child.size() == 0 && (int)r2.child.size() == 0)
     {
-        Rect r12 = r1.area | r2.area; //DA VEDERE
+        Rect r12 = r1.area | r2.area;
         // passo 2 -> si controlla che le regioni unite rispettino il predicato
         if (predicate(src(r12)))
-        { // Se rispettano, le la regione 1 sarà equivalente a reg1 + reg2 
+        { // Se rispettano, le la regione 1 sarà equivalente a reg1 + reg2
             r1.area = r12;
             r1.label = (r1.label + r2.label) / 2;
             r2.valid = false;
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     merge(src, r);
 
     // Mat out = src.clone();
-    Mat out = Mat::zeros(src.rows,src.cols,CV_8U);
+    Mat out = Mat::ones(src.rows,src.cols,CV_8U);
     display(out, r);
 
     imshow("Input", src);
