@@ -31,7 +31,7 @@ void myOtsu(Mat& src, Mat& dest)
     double varianzaInterclasse = 0.0, maxVarianza = 0.0;
     int sogliaOttimale = 0;
 
-    // 5 for calcolo
+    // 5 for calcolo soglia C1-C2
     for (int i = 0; i < 256; i++)
     {
         P1k += normHistogram[i];        // somma cumulativa P1

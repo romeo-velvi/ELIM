@@ -10,117 +10,113 @@ double myDistance(Scalar p1, Scalar p2)
            pow(p1[2] - p2[2], 2);
 }
 
+Scalar color_at(Mat src, Point p)
+{
+    return Scalar(
+        src.at<Vec3b>(p)[0],
+        src.at<Vec3b>(p)[1],
+        src.at<Vec3b>(p)[2]);
+}
+
+struct Pivot
+{
+    Scalar color;
+    vector<Point> cluster;
+};
+
 void myKmeans(Mat &src, Mat &dst, int nClusters)
 {
     // passo 0 -> sfocatura
-    GaussianBlur(src,src,Size(5,5),0,0);
+    GaussianBlur(src, src, Size(5, 5), 0, 0);
 
-    vector<Scalar> centers_colors;
-    vector<vector<Point>> clusters;
+    vector<Pivot> pivot;
 
     // Passo 1 -> Calcolo i centri
     for (int k = 0; k < nClusters; k++)
     {
-        Point center;
-        center.x = (src.cols / nClusters) * k; // K-MEANS++
-        center.y = (src.rows / nClusters) * k; // Si potrebbero prendere i centri in maniera diversa
-        Scalar center_colors(
-            src.at<Vec3b>(center)[0],
-            src.at<Vec3b>(center)[1],
-            src.at<Vec3b>(center)[2]
-        );
-        cout<<"Centro "<<k+1<<" in posizione x:"<<center.x << "\ty:"<< center.y << "\t con colore: "<< center_colors<<endl;
-        centers_colors.push_back(center_colors);
-        vector<Point> t;
-        clusters.push_back(t);
+        // in questo caso i centri sono proporzionalemnte distribuiti sulla diagonale dell'immagine ->"[\]"
+        // Si potrebbero prendere i centri in maniera diversa
+        Pivot e;
+        int x = (src.rows / nClusters) * k;
+        int y = (src.cols / nClusters) * k;
+        e.color = color_at(src, Point(y,x));
+        cout << "Centro " << k + 1 << " in posizione x:" << x << "\ty:" << y << "\t con colore: " << e.color << endl;
+        e.cluster = vector<Point>();
+        pivot.push_back(e);
     }
 
-    // Passo 2 ->  Assegno i pixel ai cluster, ricalcolo i centri usando le medie, fino a che differenza < 0.1
-    double oldCenterSum = 0;
+    // Passo 2 ->  Assegno i pixel ai cluster, ricalcolo i centri usando le medie, fino a che differenza <= 0.1
+    double old_clusters_difference = 0, new_clusters_difference = 0;
     double difference = INFINITY;
     while (difference > 0.1)
     {
         for (int k = 0; k < nClusters; k++)
         {
-            clusters[k].clear();
-            cout<<"Centro "<<k+1<<"\t con  NUOVO colore: "<< centers_colors[k] <<endl;
+            pivot[k].cluster.clear();
+            cout << "Centro " << k + 1 << "\t con  NUOVO colore: " << pivot[k].color << endl;
         }
-        
+
         // passo 3 -> controllo quali pixel facciano parte di un determinato cluster calcolando le distanze di intensità
         for (int x = 0; x < src.rows; x++)
         {
             for (int y = 0; y < src.cols; y++)
             {
                 // Calcolo le differenze di intensità da pixel ad un centro e posiziono il pixel nel relativo cluster
-                double minDistance = INFINITY;
-                int clusterIndex = 0;
-                Point pixel(y, x);
+                double min_distance = INFINITY;
+                int cluster_index = 0;
                 // si calcola differenza di intensità del pixel per ogni cluster.
                 for (int k = 0; k < nClusters; k++)
                 {
-                    Scalar center = centers_colors[k];
-                    Scalar point(
-                        src.at<Vec3b>(x, y)[0], 
-                        src.at<Vec3b>(x, y)[1],
-                        src.at<Vec3b>(x, y)[2]
-                        );
-                    double distance = myDistance(center, point);
-                    // se la distanza è più piccola di quella trovata fin ora, 
-                    if (distance < minDistance)
+                    Scalar pixel_color = color_at(src,Point(y,x));
+                    double distance = myDistance(pivot[k].color, pixel_color);
+                    if (distance < min_distance)// se la distanza è più piccola di quella trovata fin ora,
                     {
-                        minDistance = distance;
-                        clusterIndex = k; // Salvo il pixel nel cluster di indice k (a cui ha differenza minore)
+                        min_distance = distance;
+                        cluster_index = k; // Salvo il pixel nel cluster di indice k (a cui ha differenza minore)
                     }
                 }
                 // inserisco il pixel nel cluster
-                clusters[clusterIndex].push_back(pixel);
+                pivot[cluster_index].cluster.push_back(Point(y, x));
             }
         }
-        
-        
-        // passo 4 -> Calcolo la media di ogni cluster
-        double newCenterSum = 0;
+
+        // passo 4 -> Calcolo la media colore di ogni cluster
+        new_clusters_difference = 0;
         for (int k = 0; k < nClusters; k++)
         {
-            vector<Point> clusterPoints = clusters[k];
-            double blue = 0, green = 0, red = 0;
-            cout << "Cluster points size " << clusterPoints.size() << endl;
-            for (int i = 0; i < (int)clusterPoints.size(); i++)
+            vector<Point> clusterK = pivot[k].cluster; // vettore di appoggio
+            int dim_cluster = (int)clusterK.size();
+            cout << "Cluster points size " << dim_cluster << endl;
+            Scalar mean_cluster_color = Scalar(0, 0, 0);
+            for (int i = 0; i < dim_cluster; i++)
             {
-                Point pixel = clusterPoints[i];
-                blue += src.at<Vec3b>(pixel)[0];
-                green += src.at<Vec3b>(pixel)[1];
-                red += src.at<Vec3b>(pixel)[2];
+                Scalar pixel_color = color_at(src,clusterK[i]);
+                mean_cluster_color += pixel_color;
             }
-            // Calcolo media dei colori del nuovo centro
-            blue /= clusterPoints.size();
-            green /= clusterPoints.size();
-            red /= clusterPoints.size();
-            // Calcolo la distanza del nuovo centro dal vecchio e aggiungo a newCenterSum
-            Scalar center = centers_colors[k];
-            Scalar newCenter(blue, green, red);
-            newCenterSum += myDistance(newCenter, center);
-            // Aggiorno il nuovo centro
-            centers_colors[k] = newCenter;
+            mean_cluster_color /= dim_cluster;
+            pivot[k].color = mean_cluster_color; // Aggiorno il nuovo centro
+            // Calcolo la distanza del nuovo centro dal vecchio e aggiungo a new_clusters_difference
+            new_clusters_difference += myDistance(mean_cluster_color, pivot[k].color);
         }
-        newCenterSum /= nClusters;
-        difference = abs(oldCenterSum - newCenterSum);
+
+        new_clusters_difference /= nClusters;
+        difference = abs(old_clusters_difference - new_clusters_difference);
         cout << "Differenza " << difference << endl;
-        oldCenterSum = newCenterSum;
+        old_clusters_difference = new_clusters_difference;
     }
-    
+
     // passo 5 -> Disegno l'immagine di output
     for (int k = 0; k < nClusters; k++)
     {
-        vector<Point> clusterPoints = clusters[k];
-        Scalar center = centers_colors[k];
-        for (int i = 0; i < (int)clusterPoints.size(); i++)
+        vector<Point> clusterK = pivot[k].cluster;
+        Scalar pivot_color = pivot[k].color;
+        for (int i = 0; i < (int)clusterK.size(); i++)
         {
             // Assegno il valore del centro agli altri pixel del cluster
-            Point pixel = clusterPoints[i];
-            dst.at<Vec3b>(pixel)[0] = center[0];
-            dst.at<Vec3b>(pixel)[1] = center[1];
-            dst.at<Vec3b>(pixel)[2] = center[2];
+            Point pixel = clusterK[i];
+            dst.at<Vec3b>(pixel)[0] = pivot_color[0];
+            dst.at<Vec3b>(pixel)[1] = pivot_color[1];
+            dst.at<Vec3b>(pixel)[2] = pivot_color[2];
         }
     }
 }
