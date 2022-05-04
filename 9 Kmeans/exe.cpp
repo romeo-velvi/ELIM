@@ -31,14 +31,12 @@ void myKmeans(Mat &src, Mat &dst, int nClusters)
 
     vector<Pivot> pivot;
 
-    // Passo 1 -> Calcolo i centri
+    // Passo 1 -> Calcolo pivot immagine (distribuiti sulla diagonale dell'immagine ->"[\]")
     for (int k = 0; k < nClusters; k++)
     {
-        // in questo caso i centri sono proporzionalemnte distribuiti sulla diagonale dell'immagine ->"[\]"
-        // Si potrebbero prendere i centri in maniera diversa
-        Pivot e;
         int x = (src.rows / nClusters) * k;
         int y = (src.cols / nClusters) * k;
+        Pivot e;
         e.color = color_at(src, Point(y,x));
         cout << "Centro " << k + 1 << " in posizione x:" << x << "\ty:" << y << "\t con colore: " << e.color << endl;
         e.cluster = vector<Point>();
